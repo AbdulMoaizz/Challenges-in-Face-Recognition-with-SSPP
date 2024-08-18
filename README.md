@@ -1,2 +1,2 @@
-# Challenges-in-Face-Recognition-with-SSPP
-Challenges in Face Recognition with Single Sample per Person
+# Face Recognition Using Single Sample Per Person (SSPP)
+Face Recognition Using Single Sample Per Person (SSPP)
