@@ -1,9 +1,8 @@
-import open3d as o3d
-import numpy as np
 import os
+import numpy as np
 from PIL import Image
 import shutil
-
+import open3d as o3d
 
 def capture_screenshot(mesh, angle, obj_file_name, pose_name, save_folder):
     try:
@@ -45,17 +44,28 @@ def capture_screenshot(mesh, angle, obj_file_name, pose_name, save_folder):
 # Define angles for different views
 angles = {
     'pose_1': (-180, 0),
-    'pose_2': (90, 0),
-    'pose_3': (90, 90),
-    'pose_4': (90, -90),
-    'pose_5': (405, 0),
-    'pose_6': (585, 0),
-    'pose_7': (945, 0),
-    'pose_8': (-405, 0),
-    'pose_9': (-585, 0),
+    'pose_2': (-135, 0),
+    'pose_3': (-90, 0),
+    'pose_4': (-45, 0),
+    'pose_5': (0, 0),
+    'pose_6': (45, 0),
+    'pose_7': (90, 0),
+    'pose_8': (135, 0),
+    'pose_9': (180, 0),
+    'pose_10': (225, 0),
+    'pose_11': (270, 0),
+    'pose_12': (315, 0),
+    'pose_13': (0, 90),  # Top view
+    'pose_14': (0, -90),  # Bottom view
+    'pose_15': (0, 45),
+    'pose_16': (0, -45),
+    'pose_17': (45, 45),
+    'pose_18': (-45, -45),
+    'pose_19': (135, 45),
+    'pose_20': (-135, -45),
 }
 
-# Load all .obj files from the MTest_out directory
+# Load all .obj files from the directory
 obj_dir = 'PRNet/obj_db'
 obj_files = [f for f in os.listdir(obj_dir) if f.endswith('.obj')]
 
@@ -84,6 +94,11 @@ for obj_file in obj_files:
     # Capture and save the screenshots for each angle
     for pose_name, angle in angles.items():
         capture_screenshot(mesh, angle, obj_file, pose_name, person_folder)
+
+    # Save the .obj file to the corresponding folder
+    dst_obj_path = os.path.join(person_folder, obj_file)
+    shutil.copy(obj_path, dst_obj_path)
+    print(f"Copied {obj_file} to {person_folder}")
 
 # Copy matching 2D images into the corresponding directories
 original_images_dir = 'PRNet/Database'

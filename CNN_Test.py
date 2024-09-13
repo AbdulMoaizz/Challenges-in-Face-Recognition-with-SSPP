@@ -8,7 +8,7 @@ from tensorflow.keras.optimizers import Adam
 
 # Constants
 IMG_HEIGHT, IMG_WIDTH = 150, 150
-BATCH_SIZE = 32
+BATCH_SIZE = 35
 EPOCHS = 10
 DATA_DIR = 'Dataset'
 
@@ -87,7 +87,7 @@ def main():
     train_model(model, train_data)
 
     # Test with a sample image
-    test_image_path = 'PRNet/Database/a.jpg'
+    test_image_path = 'moaiz.jpg'
     recognize_face(model, test_image_path, class_labels)
 
 if __name__ == "__main__":
