@@ -1,9 +1,5 @@
 # Face Recognition Using Single Sample Per Person (SSPP)
 
-Here is the README file based on the provided requirements and details of the files.
-
----
-
 # Face Recognition Using Single Sample Per Person (SSPP)
 
 ## Overview
