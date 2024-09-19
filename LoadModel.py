@@ -15,7 +15,6 @@ IMG_HEIGHT, IMG_WIDTH = 150, 150
 DATA_DIR = 'newDS'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Define the same transformation used during training
 transform = transforms.Compose([
     transforms.Resize((IMG_HEIGHT, IMG_WIDTH)),
     transforms.RandomHorizontalFlip(),
@@ -26,7 +25,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-# Function to load class labels (assuming class labels are saved separately or inferred)
+# Function to load class labels
 def load_class_labels():
     return sorted([d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))])
 
@@ -38,8 +37,8 @@ model = FaceRecognitionModel(NUM_CLASSES).to(device)
 model.load_state_dict(torch.load('newDS_Trained_Model.pth'))
 model.eval()
 
-# Function to recognize face from an image
-def recognize_face(image_path, model, threshold=0.5):  # Lower threshold for testing
+# recognize face from an image
+def recognize_face(image_path, model, threshold=0.5):
     print(f"Starting recognize_face function for image: {image_path}")
 
     img = cv2.imread(image_path)
@@ -50,7 +49,7 @@ def recognize_face(image_path, model, threshold=0.5):  # Lower threshold for tes
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (IMG_HEIGHT, IMG_WIDTH))
     img = Image.fromarray(img)
-    img = transform(img).unsqueeze(0).to(device)  # Apply the transformations and add batch dimension
+    img = transform(img).unsqueeze(0).to(device)
 
     # Dummy 3D feature input
     geom_features = torch.zeros(1, 3 * 512).to(device)
@@ -60,23 +59,23 @@ def recognize_face(image_path, model, threshold=0.5):  # Lower threshold for tes
         outputs = model(img, geom_features)
 
     print("Model output received. Computing probabilities...")
-    probs = torch.nn.functional.softmax(outputs, dim=1)  # Softmax to get class probabilities
-    max_prob, predicted = torch.max(probs.data, 1)  # Get the highest probability class
+    probs = torch.nn.functional.softmax(outputs, dim=1)
+    max_prob, predicted = torch.max(probs.data, 1)
 
-    # Print the confidence scores for each class
+    # confidence scores for each class
     for i, class_label in enumerate(class_labels):
         print(f"Class: {class_label}, Confidence: {probs[0][i].item():.4f}")
 
-    # Print max confidence score for debugging
+    # max confidence score
     print(f"Maximum confidence score: {max_prob.item()}, Predicted class: {class_labels[predicted.item()]}")
 
     if max_prob.item() > threshold:
         class_name = class_labels[predicted.item()]
         print(f"Match found: {class_name} with confidence {max_prob.item():.4f}")
-        return class_name  # Return class name if matched
+        return class_name
     else:
         print("No match found. Probability too low.")
-        return None  # Return None if no match
+        return None
 
 
 def evaluate_model(model, data_loader):
@@ -98,27 +97,26 @@ def evaluate_model(model, data_loader):
             outputs = model(images, geom_features)
             _, predicted = torch.max(outputs.data, 1)
 
-            # Extract features for t-SNE/PCA
-            embeddings.extend(outputs.cpu().numpy())  # Collect embeddings
-            embedding_labels.extend(labels.cpu().numpy())  # Collect corresponding labels
+
+            embeddings.extend(outputs.cpu().numpy())
+            embedding_labels.extend(labels.cpu().numpy())
 
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-            # Collecting all labels and predictions for confusion matrix
             all_labels.extend(labels.cpu().numpy())
             all_predictions.extend(predicted.cpu().numpy())
 
     accuracy = 100 * correct / total
     print(f"Accuracy: {accuracy:.2f}%")
 
-    # Correctly determine unique labels present in the test data
+    # determine unique labels present in the test data
     unique_labels = sorted(list(set(all_labels + all_predictions)))
 
     # Generate confusion matrix
     cm = confusion_matrix(all_labels, all_predictions, labels=unique_labels)
 
-    # Plot the confusion matrix using seaborn
+    # Plot the confusion matrix
     plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Greens',
                 xticklabels=[class_labels[i] for i in unique_labels],
@@ -132,7 +130,7 @@ def evaluate_model(model, data_loader):
     plot_tsne(embeddings, embedding_labels)
 
 
-# Plot training and validation loss curves (if saved during training)
+# Plot training and validation loss curves
 def plot_loss_curves(training_loss, validation_loss):
     """Plot the training and validation loss curves."""
     plt.figure()
@@ -147,7 +145,6 @@ def plot_loss_curves(training_loss, validation_loss):
 
 def plot_tsne(embeddings, labels):
     """Plot a t-SNE or PCA visualization of the embeddings."""
-    #print("Performing t-SNE dimensionality reduction...")
 
     # Convert the list of embeddings to a NumPy array
     embeddings_array = np.array(embeddings)
@@ -169,13 +166,13 @@ def plot_tsne(embeddings, labels):
     plt.show()
 
 def main():
-    # Prepare Data (test set only)
+    # Prepare Data
     _, test_loader = prepare_dataloaders(DATA_DIR)
 
     # Evaluate the model on the test set
     evaluate_model(model, test_loader)
 
-    # Example of plotting loss curves (assuming you saved them during training)
+    # Example of plotting loss curves
     # Load the loss curves data
     try:
         training_loss = np.load('new_training_loss.npy')
@@ -187,7 +184,6 @@ def main():
     # Test with a sample image
     sample_image_path = 'testImg/messi.png'
     recognize_face(sample_image_path, model)
-
 
 if __name__ == "__main__":
     main()

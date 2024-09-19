@@ -1,4 +1,5 @@
 # Face Recognition Using Single Sample Per Person (SSPP)
+
 ## Overview
 
 This project is designed to tackle the Single Sample Per Person (SSPP) challenge in face recognition by generating synthetic images from a single 2D face image and leveraging deep learning models for face recognition. The system utilizes **PRNet** for 3D face reconstruction and a hybrid deep learning model to recognize faces with improved accuracy under various conditions.
