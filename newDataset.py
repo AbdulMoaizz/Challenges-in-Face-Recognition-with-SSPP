@@ -13,7 +13,6 @@ def capture_screenshot_with_trimesh(mesh_path, angles, obj_file_name, pose_name,
             print(f"Mesh is empty: {obj_file_name}")
             return
 
-        # Reduce the complexity of the mesh if it's too large
         if len(mesh.vertices) > 100000:
             mesh = mesh.simplify_quadratic_decimation(100000)
 
@@ -22,13 +21,13 @@ def capture_screenshot_with_trimesh(mesh_path, angles, obj_file_name, pose_name,
 
         # Setup rotation matrix
         rotation_matrix = trimesh.transformations.euler_matrix(
-            angles[0], angles[1], angles[2], 'sxyz')  # Apply rotations using euler_matrix
+            angles[0], angles[1], angles[2], 'sxyz')
 
         # Apply rotation
         mesh.apply_transform(rotation_matrix)
 
         # Render the scene to an image
-        image_data = scene.save_image(resolution=(512, 512))  # Adjust resolution as needed
+        image_data = scene.save_image(resolution=(512, 512))
 
         # Save the image
         image_path = os.path.join(save_folder, f'{pose_name}.png')
@@ -39,32 +38,32 @@ def capture_screenshot_with_trimesh(mesh_path, angles, obj_file_name, pose_name,
     except Exception as e:
         print(f"Error capturing screenshot for {obj_file_name} with pose {pose_name}: {e}")
 
-# Define angles for different views (roll, pitch, yaw)
+# Define angles for different views
 angles_dict = {
-    'pose_1': (0, 0, 0),         # Front view
-    'pose_2': (0, 100, 0),       # Front view with a slight upward tilt
-    'pose_3': (0, 170, 0),       # Front view with more upward tilt
-    'pose_4': (0, 190, 0),       # Front view with even more upward tilt
-    'pose_5': (0, 150, 0),       # Front view with moderate upward tilt
-    'pose_6': (0, 20, 0),        # Front view with slight downward tilt
-    'pose_7': (0, 75, 0),        # Front view with moderate downward tilt
-    'pose_8': (-50, 45, 0),      # Front-left 3/4 view
-    'pose_9': (200, -390, -5),   # Front-right view with large rotation
-    'pose_10': (45, -45, 20),    # Front-right view with a slight downward tilt
-    'pose_11': (0, 45, 0),       # Slightly downward front view
-    'pose_12': (40, -45, 0),      # Slightly upward front view
-    'pose_13': (0, 0, 30),       # Front view with slight tilt
-    'pose_14': (0, 0, -30),      # Front view with opposite tilt
-    'pose_15': (-30, 0, 45),      # Front-right view with a stronger tilt
-    'pose_16': (-30, 0, -45),    # Front-left view with a stronger tilt
-    'pose_17': (50, -30, 0),      # Right profile view with moderate tilt
-    'pose_18': (-40, -10, 0),    # Left profile view with moderate tilt
-    'pose_19': (120, 30, 0),     # Right view with moderate tilt
-    'pose_20': (-120, -30, 0),   # Left view with moderate tilt
+    'pose_1': (0, 0, 0),
+    'pose_2': (0, 100, 0),
+    'pose_3': (0, 170, 0),
+    'pose_4': (0, 190, 0),
+    'pose_5': (0, 150, 0),
+    'pose_6': (0, 20, 0),
+    'pose_7': (0, 75, 0),
+    'pose_8': (-50, 45, 0),
+    'pose_9': (200, -390, -5),
+    'pose_10': (45, -45, 20),
+    'pose_11': (0, 45, 0),
+    'pose_12': (40, -45, 0),
+    'pose_13': (0, 0, 30),
+    'pose_14': (0, 0, -30),
+    'pose_15': (-30, 0, 45),
+    'pose_16': (-30, 0, -45),
+    'pose_17': (50, -30, 0),
+    'pose_18': (-40, -10, 0),
+    'pose_19': (120, 30, 0),
+    'pose_20': (-120, -30, 0),
 }
 
 
-# Load all .obj files from the directory
+# Load all .obj files
 obj_dir = 'PRNet/newOBJ'
 obj_files = [f for f in os.listdir(obj_dir) if f.endswith('.obj')]
 
@@ -75,7 +74,7 @@ save_base_folder = 'newDS'
 if not os.path.exists(save_base_folder):
     os.makedirs(save_base_folder)
 
-# Process each .obj file
+# Process .obj file
 for obj_file in obj_files:
     obj_path = os.path.join(obj_dir, obj_file)
 
@@ -83,7 +82,7 @@ for obj_file in obj_files:
         print(f"File does not exist: {obj_file}")
         continue
 
-    # Use the .obj filename (without extension) as the subdirectory name
+    # Use the .obj filename as the subdirectory name
     obj_name = os.path.splitext(obj_file)[0]
     person_folder = os.path.join(save_base_folder, obj_name)
     if not os.path.exists(person_folder):

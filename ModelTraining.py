@@ -30,7 +30,7 @@ EPOCHS = 10
 DATA_DIR = 'newDS'
 BATCH_SIZE = count_subdirectories(DATA_DIR)
 
-# Update data augmentation pipeline
+# Update data augmentation
 transform = transforms.Compose([
     transforms.Resize((IMG_HEIGHT, IMG_WIDTH)),
     transforms.RandomHorizontalFlip(),
@@ -64,7 +64,7 @@ class FaceDataset(Dataset):
         if image is None:
             raise FileNotFoundError(f"Image not found: {self.image_paths[idx]}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = Image.fromarray(image)  # Convert ndarray to PIL Image
+        image = Image.fromarray(image)
 
         # Apply transformations
         if self.transform:
@@ -76,23 +76,22 @@ class FaceDataset(Dataset):
             mesh = trimesh.load(obj_path)
             geometric_features = self.extract_geometric_features(mesh)
         else:
-            geometric_features = torch.zeros(3 * 512)  # Ensure this is the correct size
+            geometric_features = torch.zeros(3 * 512)
 
         label = self.labels[idx]
         return image, geometric_features, torch.tensor(label, dtype=torch.long)
 
     def extract_geometric_features(self, mesh):
-        # Extract vertex normals as geometric features
         normals = mesh.vertex_normals
 
         # Ensuring a fixed size for the features
         if len(normals) > 512:
-            normals = normals[:512]  # Truncate if more than 512 vertices
+            normals = normals[:512]
         elif len(normals) < 512:
             padding = 512 - len(normals)
             normals = np.pad(normals, ((0, padding), (0, 0)), mode='constant', constant_values=0)
 
-        normals = normals.flatten()  # Flatten to 1D array
+        normals = normals.flatten()
         return torch.tensor(normals, dtype=torch.float32)
 
 # Define Model
@@ -100,32 +99,32 @@ class FaceRecognitionModel(nn.Module):
     def __init__(self, num_classes):
         super(FaceRecognitionModel, self).__init__()
 
-        # 2D CNN for image processing (Using ResNet50)
-        self.resnet = models.resnet50(weights='DEFAULT')  # Updated for latest weights parameter
-        self.resnet.fc = nn.Identity()  # Remove the final classification layer
+        # 2D CNN for image processing
+        self.resnet = models.resnet50(weights='DEFAULT')
+        self.resnet.fc = nn.Identity()
 
-        # 3D feature processing (Simple MLP as an example)
+        # 3D feature processing
         self.fc3d = nn.Sequential(
             nn.Linear(3 * 512, 1024),
             nn.ReLU(),
             nn.Linear(1024, 512),
             nn.ReLU(),
-            nn.Dropout(0.5)  # Adding dropout for regularization
+            nn.Dropout(0.5)
         )
 
         # Final classifier combining both 2D and 3D features
         self.classifier = nn.Sequential(
-            nn.Linear(2048 + 512, 256),  # Input: 2048 (ResNet) + 512 (3D features)
+            nn.Linear(2048 + 512, 256),
             nn.ReLU(),
-            nn.Dropout(0.5),  # Adding dropout before the final layer
+            nn.Dropout(0.5),
             nn.Linear(256, num_classes)
         )
 
     def forward(self, image, geometric_features):
-        x2d = self.resnet(image)  # Shape: [batch_size, 2048]
-        x3d = self.fc3d(geometric_features)  # Shape: [batch_size, 512]
-        combined = torch.cat((x2d, x3d), dim=1)  # Shape: [batch_size, 2560]
-        out = self.classifier(combined)  # Output shape: [batch_size, num_classes]
+        x2d = self.resnet(image)
+        x3d = self.fc3d(geometric_features)
+        combined = torch.cat((x2d, x3d), dim=1)
+        out = self.classifier(combined)
         return out
 
 # Ensure labels are correctly mapped
@@ -161,7 +160,7 @@ def prepare_dataloaders(data_dir):
 # Train the Model
 def train_model(model, train_loader, criterion, optimizer, num_epochs=EPOCHS):
     model.train()
-    training_losses = []  # List to store training losses
+    training_losses = []
 
     for epoch in range(num_epochs):
         running_loss = 0.0
@@ -192,7 +191,7 @@ def evaluate_model(model, test_loader):
     total = 0
     all_labels = []
     all_predictions = []
-    validation_losses = []  # List to store validation losses
+    validation_losses = []
 
     with torch.no_grad():
         for images, geom_features, labels in test_loader:
@@ -201,7 +200,7 @@ def evaluate_model(model, test_loader):
             labels = labels.to(device)
 
             outputs = model(images, geom_features)
-            loss = nn.CrossEntropyLoss()(outputs, labels)  # Compute validation loss
+            loss = nn.CrossEntropyLoss()(outputs, labels)
             validation_losses.append(loss.item())
 
             _, predicted = torch.max(outputs.data, 1)
@@ -219,7 +218,7 @@ def evaluate_model(model, test_loader):
     np.save('new_validation_loss.npy', np.array(validation_losses))
 
 
-# Function to recognize face from an image (using the trained model)
+# recognize face from an image
 def recognize_face(model, image_path, class_labels, threshold=0.7):
     model.eval()
     img = cv2.imread(image_path)
@@ -227,8 +226,8 @@ def recognize_face(model, image_path, class_labels, threshold=0.7):
         raise FileNotFoundError(f"Image not found: {image_path}")
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (IMG_HEIGHT, IMG_WIDTH))
-    img = Image.fromarray(img)  # Convert ndarray to PIL Image
-    img = transform(img).unsqueeze(0).to(device)  # Apply the transformations and add batch dimension
+    img = Image.fromarray(img)
+    img = transform(img).unsqueeze(0).to(device)
 
     # Dummy 3D feature input
     geom_features = torch.zeros(1, 3 * 512).to(device)
@@ -244,10 +243,8 @@ def recognize_face(model, image_path, class_labels, threshold=0.7):
     else:
         print("No matching person found.")
 
-    # Debug: Print confidence scores for each class
     print("Confidence scores:", probs.cpu().data.numpy())
 
-# Main Script
 def main():
     # Prepare Data
     train_loader, test_loader = prepare_dataloaders(DATA_DIR)
@@ -267,7 +264,7 @@ def main():
     torch.save(model.state_dict(), 'newDS_Trained_Model.pth')
     print("Model trained successfully")
 
-    # Test with a sample image (example usage)
+    # Test with a sample image
     sample_image_path = 'testImg/moaiz.jpg'
     recognize_face(model, sample_image_path, class_labels)
 

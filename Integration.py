@@ -6,12 +6,12 @@ from newDataset import capture_screenshot_with_trimesh, angles_dict
 from LoadModel import recognize_face, load_class_labels
 from ModelTraining import train_model, prepare_dataloaders, FaceRecognitionModel, device, class_labels
 
-image_path = "PRNet/Database/1.jpg"
+image_path = "PRNet/newDB/1.jpg"
 
 def search_image_in_database(image_path, model):
-    # Call recognize_face and return the matched class or None if no match
+
     print(f"Checking image {image_path} in the database...")
-    matched_class = recognize_face(image_path, model)  # Pass the model here
+    matched_class = recognize_face(image_path, model)
 
     if matched_class:
         print(f"Image found in database. Matched class: {matched_class}")
@@ -21,7 +21,7 @@ def search_image_in_database(image_path, model):
     return matched_class
 
 def save_to_database(image_path, matched_class):
-    # Function to save the matched image to the correct directory
+    # save the matched image to the correct directory
     print(f"Saving image to class {matched_class} directory...")
     target_dir = os.path.join('newDS', matched_class)
     if not os.path.exists(target_dir):
@@ -40,7 +40,7 @@ def handle_unmatched_image(image_path):
     command = f"wsl python2 {demo_script} -i {input_dir} -o {output_dir} --isDlib True"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(result.stdout.decode('utf-8'))  # Output from demo.py
+        print(result.stdout.decode('utf-8'))
         print("3D model generated successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error running demo.py: {e.stderr.decode('utf-8')}")
@@ -82,23 +82,19 @@ def train_or_update_model():
 def main():
     print(f"Using image: {image_path}")
 
-    # Instantiate the model first
     model = FaceRecognitionModel(num_classes=len(class_labels)).to(device)
 
-    # Load the pre-trained weights into the model
     model.load_state_dict(torch.load('newDS_Trained_Model.pth'))
 
-    # Set the model to evaluation mode
     model.eval()
 
-    # Search for the image in the database
     matched_class = search_image_in_database(image_path, model)
 
     # If a match is found, save the image to the corresponding directory and end the process
     if matched_class:
         save_to_database(image_path, matched_class)
         print("Match found, image saved. Ending process.")
-        return  # End the process here
+        return
 
     # If no match is found, handle the unmatched image by generating a 3D model
     print("No match found. Processing unmatched image...")
@@ -109,7 +105,6 @@ def main():
 
     # Update the model with the new dataset
     train_or_update_model()
-
 
 if __name__ == "__main__":
     main()
